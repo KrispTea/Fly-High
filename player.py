@@ -12,6 +12,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (80, 70))
         self.rect = self.image.get_rect(center = pos)
         self.direction = Vector2()
+        self.jumpSFX = pygame.mixer.Sound('misc\jump.wav')
         self.status = True
 
     # Input controls for the player
@@ -19,14 +20,19 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         
         if keys[pygame.K_UP]:
+            pygame.mixer.Sound.play(self.jumpSFX)
             self.direction.y = -9
     # Physics for the player
     def physics(self):
         self.rect.center += self.direction
         gravity = .8
-        # Gravity
-        self.direction.y += gravity
-        gravity += 0.01
+        if self.direction.y >= 576:
+            gravity = 0
+        else:
+            # Gravity
+            self.direction.y += gravity
+            gravity += 0.01
+        
 
     # Updates the player's movement and physics
     def update(self):
@@ -37,4 +43,4 @@ class Player(pygame.sprite.Sprite):
 
 
 
-        
+                
