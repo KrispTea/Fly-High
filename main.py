@@ -4,7 +4,6 @@ from player import Player
 from objects import Dorito, Clouds
 from userInterface import Menu
 
-
 # General pygame setup
 class Game:
     def __init__(self):
@@ -39,6 +38,10 @@ class Window:
         # Sprite groups
         self.visibleSprites = pygame.sprite.Group()
         self.enemySprites = pygame.sprite.Group()
+        self.cloudSprites = pygame.sprite.Group()
+
+        # Music variables
+        self.backgroundTrack =  pygame.mixer.music.load('misc\The Search.mp3')
 
         # UI variables
         self.score = 0
@@ -48,13 +51,30 @@ class Window:
         # Game bools
         self.forceStop = True
         self.whileMenu = True
+        # Causes of death
+        self.offScreenDeath = False
+        self.collisionDeath = False
         
     def startGame(self):
+        pygame.mixer.music.play(-1, 0.0)
         self.forceStop = False
         self.visibleSprites.empty()
         self.enemySprites.empty()
         self.mapPlayer()
         self.mapEnemy()
+        self.mapClouds()
+
+    def mapClouds(self):
+        randomY1 = random.randint(10, 576)
+        randomY2 = random.randint(10, 576)
+        randomY3 = random.randint(10, 576)
+        randomY4 = random.randint(10, 576)
+
+        # See mapPlayer()
+        Clouds((1400, randomY1),[self.cloudSprites])
+        Clouds((1700, randomY2),[self.cloudSprites])
+        Clouds((2000, randomY3),[self.cloudSprites])
+        Clouds((2300, randomY4),[self.cloudSprites])
 
     def mapPlayer(self):
         # Creates and player then assigns it to position 0, 0 
@@ -79,9 +99,20 @@ class Window:
         collided = pygame.sprite.groupcollide(self.visibleSprites, self.enemySprites, True, True)
         if collided:
             for targets in collided:
-                pygame.time.wait(1000)
+                pygame.time.wait(60)
                 targets.kill()
+                self.collisionDeath = True
                 self.forceStop = True
+
+    def killCloud(self):
+        for cloud in self.cloudSprites:
+            cloud.kill()
+
+    def deathMessage(self):
+        if self.collisionDeath == True:
+            self.ui.collisionDeathScreen()
+
+
 
     def scoreCount(self):
        # Keeps track of score/distance traveled
@@ -101,17 +132,23 @@ class Window:
                 self.startGame()
 
         if not self.forceStop:
+            
             self.scoreCount()
             self.collision()
             # Draws all visible sprites
+            self.cloudSprites.draw(self.displaySurface)
             self.visibleSprites.draw(self.displaySurface)
             self.enemySprites.draw(self.displaySurface)
             # Updates all sprites
+            self.cloudSprites.update()
             self.visibleSprites.update() 
             self.enemySprites.update()
 
         else:
+            self.killCloud()
+            self.deathMessage()
             self.score = 0
+            pygame.mixer.music.stop() 
             mouse = pygame.mouse.get_pressed()
             keys = pygame.key.get_pressed()
             if keys[pygame.K_RETURN]:
@@ -120,6 +157,7 @@ class Window:
                 
             elif mouse[2]:
                 self.whileMenu = True
+                self.collisionDeath = False
 
 
 if __name__ == "__main__":
